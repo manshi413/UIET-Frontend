@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { baseApi } from '../../environment';
-import { Box, Typography, Card, CardContent, CardHeader, Divider, IconButton, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import { Box, Typography, Card, CardContent, CardHeader, Divider, IconButton, TextField, Button, Dialog, DialogActions, DialogContent, DialogTitle, Snackbar, Alert } from "@mui/material";
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -118,6 +118,18 @@ const InnerNotice = () => {
   const [selectedAudienceMembers, setSelectedAudienceMembers] = useState([]);
   const [notices, setNotices] = useState([]);
 
+  // Snackbar state
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // 'success' or 'error'
+
+  // Function to show snackbar with message and severity
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editNoticeId, setEditNoticeId] = useState(null);
   const [editTitle, setEditTitle] = useState('');
@@ -162,6 +174,8 @@ const InnerNotice = () => {
         setTeachers([]);
         setHods([]);
         setSelectedAudienceMembers([]);
+        // Show error snackbar
+        showSnackbar('Error fetching audience members', 'error');
       }
     };
 
@@ -278,8 +292,12 @@ const InnerNotice = () => {
         recipientNames: newNotice.recipientName ? [newNotice.recipientName] : [],
       };
       setNotices((prevNotices) => [normalizedNewNotice, ...prevNotices]);
+      // Show success snackbar
+      showSnackbar('Notice created successfully', 'success');
     } catch (error) {
       console.error('Error creating notice:', error);
+      // Show error snackbar
+      showSnackbar('Error creating notice', 'error');
     }
   };
 
@@ -290,11 +308,17 @@ const InnerNotice = () => {
       console.log('Delete response:', response);
       if (response.status === 200 || response.status === 204) {
         setNotices((prevNotices) => prevNotices.filter((notice) => notice._id !== id));
+        // Show success snackbar
+        showSnackbar('Notice deleted successfully', 'success');
       } else {
         console.error('Failed to delete notice:', response);
+        // Show error snackbar
+        showSnackbar('Failed to delete notice', 'error');
       }
     } catch (error) {
       console.error('Error deleting notice:', error);
+      // Show error snackbar
+      showSnackbar('Error deleting notice', 'error');
     }
   };
 
@@ -324,8 +348,12 @@ const InnerNotice = () => {
         )
       );
       handleEditClose();
+      // Show success snackbar
+      showSnackbar('Notice updated successfully', 'success');
     } catch (error) {
       console.error('Error updating notice:', error);
+      // Show error snackbar
+      showSnackbar('Error updating notice', 'error');
     }
   };
 
@@ -486,7 +514,7 @@ const InnerNotice = () => {
         </button>
       </form>
 
-      {/* Display notices below the submit button */}
+      {/* Display notices below the submit button */} 
       <Box className="notices-container" sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3, mt: 4 }}>
         {noticesToDisplay.length === 0 ? (
           <Typography variant="h6" align="center">No notices to display.</Typography>
@@ -565,6 +593,26 @@ const InnerNotice = () => {
           <Button onClick={handleEditSave} variant="contained" color="primary">Save</Button>
         </DialogActions>
       </Dialog>
+      
+      {/* Snackbar for alerts */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity={snackbarSeverity}
+          sx={{
+            width: '100%',
+            backgroundColor: snackbarSeverity === 'success' ? '#006400' : snackbarSeverity === 'error' ? '#8B0000' : undefined,
+            color: '#fff',
+          }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };
